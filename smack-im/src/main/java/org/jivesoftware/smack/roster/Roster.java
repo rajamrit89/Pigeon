@@ -17,11 +17,13 @@
 
 package org.jivesoftware.smack.roster;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -46,6 +48,9 @@ import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
 import org.jivesoftware.smack.XMPPConnectionRegistry;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
+import org.jivesoftware.smack.db.Identity;
+import org.jivesoftware.smack.db.IdentityDAO;
+import org.jivesoftware.smack.db.MyDAOFactory;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.iqrequest.AbstractIqRequestHandler;
@@ -116,6 +121,21 @@ public class Roster extends Manager {
              * 
              *  write DAO class and add by default created Dao there, and in later phase do this activity as ormlite has suggested 
              */
+            IdentityDAO iDAO = MyDAOFactory.getInstance().getIdentityDAO();
+            List<Identity> identities = null;
+			try {
+				identities = iDAO.queryForAll();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            Iterator<Identity> itr = identities.iterator();
+            while(itr.hasNext()){
+            	Identity identity = itr.next();
+            	entries.put(identity.getIdentifier(), new RosterEntry(identity.getIdentifier(),identity.getName()
+            			,RosterPacket.ItemType.both,RosterPacket.ItemStatus.subscribe,roster,connection));
+            }
+            
         }
         return roster;
     }
